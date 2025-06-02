@@ -262,102 +262,20 @@
       }
     }
 
-    // Fájlok automatikus felderítése - javított verzió
+    // Fájlok automatikus felderítése - szerveres verzió
     async function discoverMarkdownFiles() {
       const fileLoadingIndicator = document.getElementById('file-loading');
       const selector = document.getElementById('file-selector');
       const fileCount = document.getElementById('file-count');
-      
-      discoveryLog = []; // Log törlése
+      discoveryLog = [];
       fileLoadingIndicator.classList.remove('hidden');
       selector.innerHTML = '<option value="" disabled selected>Fájlok keresése...</option>';
-      
-      addDiscoveryLog('Fájl felderítés indítása...');
-      
+      addDiscoveryLog('Fájl felderítés indítása szerver API-val...');
       try {
-        // Bővített fájlnév lista
-        const potentialFiles = [
-          // Gyakori nevek
-          'readme.md', 'README.md', 'Readme.md',
-          'index.md', 'INDEX.md', 'Index.md',
-          'example.md', 'EXAMPLE.md', 'Example.md',
-          'sample.md', 'SAMPLE.md', 'Sample.md',
-          'docs.md', 'DOCS.md', 'Docs.md',
-          'documentation.md', 'DOCUMENTATION.md', 'Documentation.md',
-          'guide.md', 'GUIDE.md', 'Guide.md',
-          'tutorial.md', 'TUTORIAL.md', 'Tutorial.md',
-          'help.md', 'HELP.md', 'Help.md',
-          'faq.md', 'FAQ.md', 'Faq.md',
-          'changelog.md', 'CHANGELOG.md', 'Changelog.md',
-          'news.md', 'NEWS.md', 'News.md',
-          'notes.md', 'NOTES.md', 'Notes.md',
-          'info.md', 'INFO.md', 'Info.md',
-          'about.md', 'ABOUT.md', 'About.md',
-          'license.md', 'LICENSE.md', 'License.md',
-          'contributing.md', 'CONTRIBUTING.md', 'Contributing.md',
-          
-          // Számozott fájlok
-          ...Array.from({length: 50}, (_, i) => `file${i + 1}.md`),
-          ...Array.from({length: 20}, (_, i) => `doc${i + 1}.md`),
-          ...Array.from({length: 20}, (_, i) => `page${i + 1}.md`),
-          ...Array.from({length: 10}, (_, i) => `chapter${i + 1}.md`),
-          
-          // Dátum alapú fájlok
-          ...generateDateBasedFiles(),
-          
-          // Magyar fájlnevek
-          'leiras.md', 'LEIRAS.md', 'Leiras.md',
-          'dokumentacio.md', 'DOKUMENTACIO.md', 'Dokumentacio.md',
-          'utmutato.md', 'UTMUTATO.md', 'Utmutato.md',
-          'segitseg.md', 'SEGITSEG.md', 'Segitseg.md',
-          'informacio.md', 'INFORMACIO.md', 'Informacio.md',
-          'bevezeto.md', 'BEVEZETO.md', 'Bevezeto.md',
-          'kezdes.md', 'KEZDES.md', 'Kezdes.md',
-          
-          // Fallback fájlok
-          ...fallbackFiles
-        ];
-
-        addDiscoveryLog(`${potentialFiles.length} potenciális fájlnév ellenőrzése...`);
-
-        const existingFiles = [];
-        let checkedCount = 0;
-        
-        // Párhuzamos ellenőrzés kisebb batch-ekben a teljesítmény javítása érdekében
-        const batchSize = 10;
-        for (let i = 0; i < potentialFiles.length; i += batchSize) {
-          const batch = potentialFiles.slice(i, i + batchSize);
-          const batchPromises = batch.map(async (filename) => {
-            try {
-              const response = await fetch(`files/${filename}`, { 
-                method: 'HEAD',
-                cache: 'no-cache'
-              });
-              checkedCount++;
-              
-              if (response.ok) {
-                addDiscoveryLog(`✓ Fájl találva: ${filename}`);
-                return filename;
-              }
-              return null;
-            } catch (e) {
-              checkedCount++;
-              return null;
-            }
-          });
-          
-          const batchResults = await Promise.all(batchPromises);
-          existingFiles.push(...batchResults.filter(file => file !== null));
-          
-          // Frissítjük a progress-t
-          selector.innerHTML = `<option value="" disabled selected>Ellenőrzés... (${checkedCount}/${potentialFiles.length})</option>`;
-        }
-
-        addDiscoveryLog(`Ellenőrzés befejezve. ${existingFiles.length} fájl található.`);
-
-        // Duplikátumok eltávolítása és rendezés
-        availableFiles = [...new Set(existingFiles)].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-        
+        const response = await fetch('/api/files');
+        if (!response.ok) throw new Error('Nem sikerült lekérni a fájlok listáját.');
+        const files = await response.json();
+        availableFiles = files;
         if (availableFiles.length > 0) {
           populateFileSelector(availableFiles);
           addDiscoveryLog(`Sikeres felderítés: ${availableFiles.length} Markdown fájl betöltve.`);
@@ -366,36 +284,14 @@
           selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
           fileCount.textContent = 'Nincs fájl';
         }
-
       } catch (error) {
         console.error('Hiba a fájlok felderítése során:', error);
         addDiscoveryLog(`Hiba történt: ${error.message}`);
-        
-        // Fallback: használjuk a kézzel megadott listát
-        availableFiles = fallbackFiles;
-        populateFileSelector(availableFiles);
-        addDiscoveryLog('Fallback lista használata.');
+        selector.innerHTML = '<option value="" disabled selected>Hiba történt a fájlok betöltésekor</option>';
+        fileCount.textContent = 'Hiba';
       }
-      
       fileLoadingIndicator.classList.add('hidden');
       showDiscoveryLog();
-    }
-
-    // Dátum alapú fájlnevek generálása
-    function generateDateBasedFiles() {
-      const files = [];
-      const currentYear = new Date().getFullYear();
-      const years = [currentYear - 1, currentYear, currentYear + 1];
-      const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-      
-      years.forEach(year => {
-        months.forEach(month => {
-          files.push(`${year}-${month}.md`);
-          files.push(`${year}_${month}.md`);
-        });
-      });
-      
-      return files;
     }
 
     // Fájl selector feltöltése
