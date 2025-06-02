@@ -2,55 +2,172 @@
 <html lang="hu">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jelszavas Markdown‐néző</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    #login {
-      max-width: 300px;
-      margin: 100px auto;
-      text-align: center;
-    }
-    #content {
-      display: none;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    #file-selector {
-      margin-bottom: 20px;
-    }
-    #viewer {
-      border: 1px solid #ccc;
-      padding: 10px;
-    }
-    /* Kis alapstílus a Markdown‐tartalomnak */
-    #viewer h1 { font-size: 1.8em; margin-bottom: 0.3em; }
-    #viewer h2 { font-size: 1.5em; margin-bottom: 0.3em; }
-    #viewer p { margin-bottom: 0.8em; line-height: 1.4; }
-    #viewer code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
-    #viewer pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
-  </style>
-  <!-- Marked.js CDN – a Markdown parszolásához -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
+  <style>
+    .markdown-body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+    }
+    .markdown-body h1 { font-size: 2em; margin-bottom: 0.5em; font-weight: 600; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+    .markdown-body h2 { font-size: 1.5em; margin-bottom: 0.5em; font-weight: 600; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+    .markdown-body h3 { font-size: 1.25em; margin-bottom: 0.5em; font-weight: 600; }
+    .markdown-body h4 { font-size: 1em; margin-bottom: 0.5em; font-weight: 600; }
+    .markdown-body p { margin-bottom: 1em; }
+    .markdown-body ul, .markdown-body ol { margin-bottom: 1em; padding-left: 2em; }
+    .markdown-body li { margin-bottom: 0.25em; }
+    .markdown-body code { background-color: rgba(27, 31, 35, 0.05); padding: 0.2em 0.4em; border-radius: 3px; font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; }
+    .markdown-body pre { background-color: #f6f8fa; padding: 16px; overflow: auto; border-radius: 6px; margin-bottom: 1em; }
+    .markdown-body pre code { background-color: transparent; padding: 0; }
+    .markdown-body blockquote { padding: 0 1em; color: #6a737d; border-left: 0.25em solid #dfe2e5; margin-bottom: 1em; }
+    .markdown-body table { border-collapse: collapse; margin-bottom: 1em; width: 100%; overflow: auto; }
+    .markdown-body table th, .markdown-body table td { padding: 6px 13px; border: 1px solid #dfe2e5; }
+    .markdown-body table tr { background-color: #fff; border-top: 1px solid #c6cbd1; }
+    .markdown-body table tr:nth-child(2n) { background-color: #f6f8fa; }
+    .markdown-body img { max-width: 100%; }
+    .markdown-body hr { height: 0.25em; padding: 0; margin: 24px 0; background-color: #e1e4e8; border: 0; }
+    
+    /* Dark mode styles */
+    .dark .markdown-body { color: #c9d1d9; }
+    .dark .markdown-body h1, .dark .markdown-body h2 { border-bottom-color: #30363d; }
+    .dark .markdown-body code { background-color: rgba(240, 246, 252, 0.15); }
+    .dark .markdown-body pre { background-color: #161b22; }
+    .dark .markdown-body blockquote { color: #8b949e; border-left-color: #30363d; }
+    .dark .markdown-body table tr { background-color: #0d1117; border-top-color: #30363d; }
+    .dark .markdown-body table tr:nth-child(2n) { background-color: #161b22; }
+    .dark .markdown-body table th, .dark .markdown-body table td { border-color: #30363d; }
+    .dark .markdown-body hr { background-color: #30363d; }
+    
+    .transition-all { transition: all 0.3s ease; }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .dark ::-webkit-scrollbar-track { background: #1a1a1a; }
+    .dark ::-webkit-scrollbar-thumb { background: #555; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #777; }
+  </style>
 </head>
-<body>
-  <!-- Belépési panel -->
-  <div id="login">
-    <h2>Jelszó szükséges</h2>
-    <input type="password" id="password" placeholder="Írd be a jelszót"><br><br>
-    <button id="login-btn">Belépés</button>
-    <p id="login-message" style="color:red;"></p>
+<body class="bg-gray-50 text-gray-900 transition-all">
+  <!-- Theme toggle button -->
+  <div class="fixed top-4 right-4 z-10">
+    <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <!-- Sun icon (for dark mode) -->
+      <svg id="sun-icon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+      </svg>
+      <!-- Moon icon (for light mode) -->
+      <svg id="moon-icon" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+      </svg>
+    </button>
   </div>
 
-  <!-- Ha a jelszó helyes, megjelenik ez a rész -->
-  <div id="content">
-    <h3>Válassz egy Markdown‐fájlt:</h3>
-    <select id="file-selector"></select>
-    <button id="view-btn">Megnyitás</button>
-    <hr>
-    <div id="viewer"></div>
+  <!-- Login panel -->
+  <div id="login" class="min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 transition-all">
+      <div class="text-center">
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Jelszavas Markdown-néző</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">Kérjük, add meg a jelszót a folytatáshoz</p>
+      </div>
+      
+      <div class="space-y-4">
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jelszó</label>
+          <div class="relative">
+            <input type="password" id="password" 
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                  placeholder="Írd be a jelszót">
+            <button id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 dark:text-gray-400">
+              <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+              <svg id="eye-off-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <button id="login-btn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+          Belépés
+        </button>
+        
+        <div id="login-message" class="text-red-500 text-center hidden">
+          <p>Hibás jelszó! Kérjük, próbáld újra.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content panel (hidden by default) -->
+  <div id="content" class="hidden min-h-screen flex flex-col transition-all">
+    <header class="bg-white dark:bg-gray-800 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex justify-between items-center">
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Markdown-néző</h1>
+          <button id="logout-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <main class="flex-grow container mx-auto px-4 py-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+          <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Válassz egy Markdown-fájlt</h2>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex-grow">
+              <select id="file-selector" 
+                      class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white">
+                <option value="" disabled selected>Válassz egy fájlt...</option>
+              </select>
+            </div>
+            <button id="view-btn" 
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              Megnyitás
+            </button>
+          </div>
+        </div>
+        
+        <div id="viewer-container" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 overflow-hidden">
+          <div id="loading" class="hidden flex justify-center items-center py-12">
+            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <div id="viewer" class="markdown-body dark:text-gray-200">
+            <div class="text-center text-gray-500 dark:text-gray-400 py-12">
+              <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <h3 class="mt-2 text-sm font-medium">Nincs kiválasztott dokumentum</h3>
+              <p class="mt-1 text-sm">Válassz egy fájlt a megtekintéshez.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <footer class="bg-white dark:bg-gray-800 shadow-inner">
+      <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+          Jelszavas Markdown-néző &copy; 2023
+        </p>
+      </div>
+    </footer>
   </div>
 
   <script>
@@ -72,42 +189,201 @@
       return hashHex;
     }
 
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const pwd = document.getElementById('password').value;
-      const pwdHash = await sha256(pwd);
-      if (pwdHash === correctHash) {
-        // helyes jelszó: elrejtjük a login részt, megmutatjuk a tartalmat
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
+    // Markdown feldolgozás konfigurálása
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      },
+      breaks: true,
+      gfm: true
+    });
 
-        // feltöltjük a legördülő menüt a files tömb alapján
-        const selector = document.getElementById('file-selector');
-        files.forEach(f => {
-          const opt = document.createElement('option');
-          opt.value = f;
-          opt.textContent = f;
-          selector.appendChild(opt);
-        });
+    // Téma kezelése
+    function initTheme() {
+      // Ellenőrizzük, hogy a felhasználó preferál-e sötét módot
+      if (localStorage.theme === 'dark' || 
+          (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        document.body.classList.add('dark');
+        document.body.classList.add('bg-gray-900');
+        document.getElementById('sun-icon').classList.remove('hidden');
+        document.getElementById('moon-icon').classList.add('hidden');
       } else {
-        document.getElementById('login-message').textContent = 'Hibás jelszó!';
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+        document.body.classList.remove('bg-gray-900');
+        document.getElementById('sun-icon').classList.add('hidden');
+        document.getElementById('moon-icon').classList.remove('hidden');
+      }
+    }
+
+    // Téma váltás
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+        document.body.classList.remove('bg-gray-900');
+        document.body.classList.add('bg-gray-50');
+        document.getElementById('sun-icon').classList.add('hidden');
+        document.getElementById('moon-icon').classList.remove('hidden');
+        localStorage.theme = 'light';
+      } else {
+        document.documentElement.classList.add('dark');
+        document.body.classList.add('dark');
+        document.body.classList.remove('bg-gray-50');
+        document.body.classList.add('bg-gray-900');
+        document.getElementById('sun-icon').classList.remove('hidden');
+        document.getElementById('moon-icon').classList.add('hidden');
+        localStorage.theme = 'dark';
       }
     });
 
+    // Jelszó láthatóság kapcsolása
+    document.getElementById('toggle-password').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const eyeIcon = document.getElementById('eye-icon');
+      const eyeOffIcon = document.getElementById('eye-off-icon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.classList.add('hidden');
+        eyeOffIcon.classList.remove('hidden');
+      } else {
+        passwordInput.type = 'password';
+        eyeIcon.classList.remove('hidden');
+        eyeOffIcon.classList.add('hidden');
+      }
+    });
+
+    // Enter gomb kezelése a jelszó mezőnél
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        document.getElementById('login-btn').click();
+      }
+    });
+
+    // Bejelentkezés gomb kezelése
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const loginMessage = document.getElementById('login-message');
+      const pwd = document.getElementById('password').value;
+      
+      if (!pwd) {
+        loginMessage.classList.remove('hidden');
+        loginMessage.innerHTML = '<p>Kérjük, add meg a jelszót!</p>';
+        return;
+      }
+      
+      // Jelezzük, hogy folyamatban van a bejelentkezés
+      document.getElementById('login-btn').disabled = true;
+      document.getElementById('login-btn').innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Ellenőrzés...
+      `;
+      
+      try {
+        const pwdHash = await sha256(pwd);
+        if (pwdHash === correctHash) {
+          // helyes jelszó: elrejtjük a login részt, megmutatjuk a tartalmat
+          document.getElementById('login').classList.add('hidden');
+          document.getElementById('content').classList.remove('hidden');
+
+          // feltöltjük a legördülő menüt a files tömb alapján
+          const selector = document.getElementById('file-selector');
+          selector.innerHTML = '<option value="" disabled selected>Válassz egy fájlt...</option>';
+          files.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = f;
+            selector.appendChild(opt);
+          });
+        } else {
+          loginMessage.classList.remove('hidden');
+          loginMessage.innerHTML = '<p>Hibás jelszó! Kérjük, próbáld újra.</p>';
+          
+          // Visszaállítjuk a gombot
+          document.getElementById('login-btn').disabled = false;
+          document.getElementById('login-btn').textContent = 'Belépés';
+        }
+      } catch (error) {
+        console.error('Hiba történt:', error);
+        loginMessage.classList.remove('hidden');
+        loginMessage.innerHTML = '<p>Hiba történt a bejelentkezés során. Kérjük, próbáld újra!</p>';
+        
+        // Visszaállítjuk a gombot
+        document.getElementById('login-btn').disabled = false;
+        document.getElementById('login-btn').textContent = 'Belépés';
+      }
+    });
+
+    // Kijelentkezés gomb kezelése
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      document.getElementById('login').classList.remove('hidden');
+      document.getElementById('content').classList.add('hidden');
+      document.getElementById('password').value = '';
+      document.getElementById('login-message').classList.add('hidden');
+      document.getElementById('login-btn').disabled = false;
+      document.getElementById('login-btn').textContent = 'Belépés';
+    });
+
+    // Fájl megnyitása gomb kezelése
     document.getElementById('view-btn').addEventListener('click', () => {
       const filename = document.getElementById('file-selector').value;
+      if (!filename) {
+        document.getElementById('viewer').innerHTML = `
+          <div class="text-center text-red-500 py-12">
+            <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium">Nincs kiválasztott fájl</h3>
+            <p class="mt-1 text-sm">Kérjük, válassz egy fájlt a legördülő menüből.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Betöltés jelzése
+      document.getElementById('viewer').innerHTML = '';
+      document.getElementById('loading').classList.remove('hidden');
+      
       fetch('files/' + filename)
         .then(res => {
           if (!res.ok) throw new Error('A kiválasztott fájl nem található.');
           return res.text();
         })
         .then(md => {
+          // Elrejtjük a betöltés jelzőt
+          document.getElementById('loading').classList.add('hidden');
+          
           // Marked.js-sel átalakítjuk HTML-re
           document.getElementById('viewer').innerHTML = marked.parse(md);
+          
+          // Kód szintaxis kiemelés alkalmazása
+          document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
         })
         .catch(err => {
-          document.getElementById('viewer').innerHTML = '<p style="color:red;">' + err.message + '</p>';
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('viewer').innerHTML = `
+            <div class="text-center text-red-500 py-12">
+              <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <h3 class="mt-2 text-sm font-medium">Hiba történt</h3>
+              <p class="mt-1 text-sm">${err.message}</p>
+            </div>
+          `;
         });
     });
+
+    // Téma inicializálása
+    initTheme();
   </script>
 </body>
 </html>
