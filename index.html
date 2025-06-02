@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jelszavas Markdown‐néző</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <style>
     .markdown-body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -158,6 +158,10 @@
               Fájlok keresése...
             </div>
           </div>
+          <div id="discovery-log" class="hidden mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+            <div class="font-medium mb-2">Fájl felderítés részletei:</div>
+            <div id="discovery-details" class="text-gray-600 dark:text-gray-300 space-y-1"></div>
+          </div>
         </div>
         
         <div id="viewer-container" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 overflow-hidden">
@@ -196,10 +200,12 @@
     // Fallback fájlok listája (ha az automatikus felderítés nem működik)
     const fallbackFiles = [
       'example.md',
-      'readme.md'
+      'readme.md',
+      'README.md'
     ];
 
     let availableFiles = [];
+    let discoveryLog = [];
 
     // A böngészőben elvégzett SHA-256 (Web Crypto API)
     async function sha256(message) {
@@ -211,151 +217,185 @@
     }
 
     // Markdown feldolgozás konfigurálása
-    marked.setOptions({
-      highlight: function(code, lang) {
-        if (lang && hljs.getLanguage(lang)) {
-          return hljs.highlight(code, { language: lang }).value;
-        }
-        return hljs.highlightAuto(code).value;
-      },
-      breaks: true,
-      gfm: true
-    });
+    function initializeMarked() {
+      if (typeof marked !== 'undefined') {
+        marked.setOptions({
+          highlight: function(code, lang) {
+            // Ellenőrizzük, hogy a hljs elérhető-e
+            if (typeof hljs !== 'undefined') {
+              if (lang && hljs.getLanguage(lang)) {
+                try {
+                  return hljs.highlight(code, { language: lang }).value;
+                } catch (e) {
+                  console.warn('Highlight.js hiba:', e);
+                }
+              }
+              try {
+                return hljs.highlightAuto(code).value;
+              } catch (e) {
+                console.warn('Highlight.js auto hiba:', e);
+              }
+            }
+            // Ha nincs hljs, visszaadjuk a kódot változtatás nélkül
+            return code;
+          },
+          breaks: true,
+          gfm: true
+        });
+      }
+    }
 
-    // Fájlok automatikus felderítése
+    // Log hozzáadása a felderítési folyamathoz
+    function addDiscoveryLog(message) {
+      discoveryLog.push(message);
+      console.log('Discovery:', message);
+    }
+
+    // Discovery log megjelenítése
+    function showDiscoveryLog() {
+      const logContainer = document.getElementById('discovery-log');
+      const logDetails = document.getElementById('discovery-details');
+      
+      if (discoveryLog.length > 0) {
+        logDetails.innerHTML = discoveryLog.map(log => `<div>• ${log}</div>`).join('');
+        logContainer.classList.remove('hidden');
+      }
+    }
+
+    // Fájlok automatikus felderítése - javított verzió
     async function discoverMarkdownFiles() {
       const fileLoadingIndicator = document.getElementById('file-loading');
       const selector = document.getElementById('file-selector');
       const fileCount = document.getElementById('file-count');
       
+      discoveryLog = []; // Log törlése
       fileLoadingIndicator.classList.remove('hidden');
       selector.innerHTML = '<option value="" disabled selected>Fájlok keresése...</option>';
       
+      addDiscoveryLog('Fájl felderítés indítása...');
+      
       try {
-        // Próbálkozás 1: Directory listing API (ha van)
-        try {
-          const response = await fetch('files/', {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json, text/html'
+        // Bővített fájlnév lista
+        const potentialFiles = [
+          // Gyakori nevek
+          'readme.md', 'README.md', 'Readme.md',
+          'index.md', 'INDEX.md', 'Index.md',
+          'example.md', 'EXAMPLE.md', 'Example.md',
+          'sample.md', 'SAMPLE.md', 'Sample.md',
+          'docs.md', 'DOCS.md', 'Docs.md',
+          'documentation.md', 'DOCUMENTATION.md', 'Documentation.md',
+          'guide.md', 'GUIDE.md', 'Guide.md',
+          'tutorial.md', 'TUTORIAL.md', 'Tutorial.md',
+          'help.md', 'HELP.md', 'Help.md',
+          'faq.md', 'FAQ.md', 'Faq.md',
+          'changelog.md', 'CHANGELOG.md', 'Changelog.md',
+          'news.md', 'NEWS.md', 'News.md',
+          'notes.md', 'NOTES.md', 'Notes.md',
+          'info.md', 'INFO.md', 'Info.md',
+          'about.md', 'ABOUT.md', 'About.md',
+          'license.md', 'LICENSE.md', 'License.md',
+          'contributing.md', 'CONTRIBUTING.md', 'Contributing.md',
+          
+          // Számozott fájlok
+          ...Array.from({length: 50}, (_, i) => `file${i + 1}.md`),
+          ...Array.from({length: 20}, (_, i) => `doc${i + 1}.md`),
+          ...Array.from({length: 20}, (_, i) => `page${i + 1}.md`),
+          ...Array.from({length: 10}, (_, i) => `chapter${i + 1}.md`),
+          
+          // Dátum alapú fájlok
+          ...generateDateBasedFiles(),
+          
+          // Magyar fájlnevek
+          'leiras.md', 'LEIRAS.md', 'Leiras.md',
+          'dokumentacio.md', 'DOKUMENTACIO.md', 'Dokumentacio.md',
+          'utmutato.md', 'UTMUTATO.md', 'Utmutato.md',
+          'segitseg.md', 'SEGITSEG.md', 'Segitseg.md',
+          'informacio.md', 'INFORMACIO.md', 'Informacio.md',
+          'bevezeto.md', 'BEVEZETO.md', 'Bevezeto.md',
+          'kezdes.md', 'KEZDES.md', 'Kezdes.md',
+          
+          // Fallback fájlok
+          ...fallbackFiles
+        ];
+
+        addDiscoveryLog(`${potentialFiles.length} potenciális fájlnév ellenőrzése...`);
+
+        const existingFiles = [];
+        let checkedCount = 0;
+        
+        // Párhuzamos ellenőrzés kisebb batch-ekben a teljesítmény javítása érdekében
+        const batchSize = 10;
+        for (let i = 0; i < potentialFiles.length; i += batchSize) {
+          const batch = potentialFiles.slice(i, i + batchSize);
+          const batchPromises = batch.map(async (filename) => {
+            try {
+              const response = await fetch(`files/${filename}`, { 
+                method: 'HEAD',
+                cache: 'no-cache'
+              });
+              checkedCount++;
+              
+              if (response.ok) {
+                addDiscoveryLog(`✓ Fájl találva: ${filename}`);
+                return filename;
+              }
+              return null;
+            } catch (e) {
+              checkedCount++;
+              return null;
             }
           });
           
-          if (response.ok) {
-            const contentType = response.headers.get('content-type');
-            
-            // Ha JSON választ kapunk (egyedi API)
-            if (contentType && contentType.includes('application/json')) {
-              const data = await response.json();
-              if (data.files && Array.isArray(data.files)) {
-                availableFiles = data.files.filter(file => file.endsWith('.md'));
-                if (availableFiles.length > 0) {
-                  populateFileSelector(availableFiles);
-                  fileLoadingIndicator.classList.add('hidden');
-                  return;
-                }
-              }
-            }
-            
-            // Ha HTML választ kapunk (Apache/Nginx directory listing)
-            if (contentType && contentType.includes('text/html')) {
-              const html = await response.text();
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(html, 'text/html');
-              const links = doc.querySelectorAll('a[href]');
-              
-              const foundFiles = [];
-              links.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && href.endsWith('.md') && !href.startsWith('/') && !href.includes('..')) {
-                  foundFiles.push(href);
-                }
-              });
-              
-              if (foundFiles.length > 0) {
-                availableFiles = foundFiles;
-                populateFileSelector(availableFiles);
-                fileLoadingIndicator.classList.add('hidden');
-                return;
-              }
-            }
-          }
-        } catch (e) {
-          console.log('Directory listing nem elérhető:', e.message);
+          const batchResults = await Promise.all(batchPromises);
+          existingFiles.push(...batchResults.filter(file => file !== null));
+          
+          // Frissítjük a progress-t
+          selector.innerHTML = `<option value="" disabled selected>Ellenőrzés... (${checkedCount}/${potentialFiles.length})</option>`;
         }
 
-        // Próbálkozás 2: Ismert fájlnevek ellenőrzése
-        const commonMarkdownFiles = [
-          'readme.md', 'README.md', 'index.md', 'INDEX.md',
-          'example.md', 'EXAMPLE.md', 'sample.md', 'SAMPLE.md',
-          'docs.md', 'DOCS.md', 'documentation.md', 'DOCUMENTATION.md',
-          'guide.md', 'GUIDE.md', 'tutorial.md', 'TUTORIAL.md',
-          'help.md', 'HELP.md', 'faq.md', 'FAQ.md',
-          'changelog.md', 'CHANGELOG.md', 'news.md', 'NEWS.md',
-          'notes.md', 'NOTES.md', 'info.md', 'INFO.md'
-        ];
+        addDiscoveryLog(`Ellenőrzés befejezve. ${existingFiles.length} fájl található.`);
 
-        const existingFiles = [];
+        // Duplikátumok eltávolítása és rendezés
+        availableFiles = [...new Set(existingFiles)].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         
-        // Ellenőrizzük a gyakori fájlneveket
-        for (const filename of commonMarkdownFiles) {
-          try {
-            const response = await fetch(`files/${filename}`, { method: 'HEAD' });
-            if (response.ok) {
-              existingFiles.push(filename);
-            }
-          } catch (e) {
-            // Fájl nem létezik, folytatjuk
-          }
-        }
-
-        // Próbálkozás 3: Számozott fájlok keresése (pl. file1.md, file2.md, stb.)
-        for (let i = 1; i <= 20; i++) {
-          try {
-            const filename = `file${i}.md`;
-            const response = await fetch(`files/${filename}`, { method: 'HEAD' });
-            if (response.ok) {
-              existingFiles.push(filename);
-            }
-          } catch (e) {
-            // Fájl nem létezik
-          }
-        }
-
-        // Próbálkozás 4: Dátum alapú fájlok keresése
-        const currentYear = new Date().getFullYear();
-        const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-        
-        for (const month of months) {
-          try {
-            const filename = `${currentYear}-${month}.md`;
-            const response = await fetch(`files/${filename}`, { method: 'HEAD' });
-            if (response.ok) {
-              existingFiles.push(filename);
-            }
-          } catch (e) {
-            // Fájl nem létezik
-          }
-        }
-
-        if (existingFiles.length > 0) {
-          availableFiles = [...new Set(existingFiles)]; // Duplikátumok eltávolítása
+        if (availableFiles.length > 0) {
           populateFileSelector(availableFiles);
+          addDiscoveryLog(`Sikeres felderítés: ${availableFiles.length} Markdown fájl betöltve.`);
         } else {
-          // Fallback: használjuk a kézzel megadott listát
-          console.log('Automatikus felderítés sikertelen, fallback lista használata');
-          availableFiles = fallbackFiles;
-          populateFileSelector(availableFiles);
+          addDiscoveryLog('Nem található Markdown fájl a files/ mappában.');
+          selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
+          fileCount.textContent = 'Nincs fájl';
         }
 
       } catch (error) {
         console.error('Hiba a fájlok felderítése során:', error);
+        addDiscoveryLog(`Hiba történt: ${error.message}`);
+        
         // Fallback: használjuk a kézzel megadott listát
         availableFiles = fallbackFiles;
         populateFileSelector(availableFiles);
+        addDiscoveryLog('Fallback lista használata.');
       }
       
       fileLoadingIndicator.classList.add('hidden');
+      showDiscoveryLog();
+    }
+
+    // Dátum alapú fájlnevek generálása
+    function generateDateBasedFiles() {
+      const files = [];
+      const currentYear = new Date().getFullYear();
+      const years = [currentYear - 1, currentYear, currentYear + 1];
+      const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+      
+      years.forEach(year => {
+        months.forEach(month => {
+          files.push(`${year}-${month}.md`);
+          files.push(`${year}_${month}.md`);
+        });
+      });
+      
+      return files;
     }
 
     // Fájl selector feltöltése
@@ -371,10 +411,7 @@
         return;
       }
 
-      // Fájlok rendezése ABC sorrendben
-      const sortedFiles = [...files].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-      
-      sortedFiles.forEach(file => {
+      files.forEach(file => {
         const option = document.createElement('option');
         option.value = file;
         option.textContent = file;
@@ -475,6 +512,9 @@
           document.getElementById('login').classList.add('hidden');
           document.getElementById('content').classList.remove('hidden');
 
+          // Markdown inicializálása
+          initializeMarked();
+
           // Automatikus fájl felderítés indítása
           await discoverMarkdownFiles();
         } else {
@@ -498,6 +538,7 @@
 
     // Fájlok frissítése gomb
     document.getElementById('refresh-files').addEventListener('click', async () => {
+      document.getElementById('discovery-log').classList.add('hidden');
       await discoverMarkdownFiles();
     });
 
@@ -509,6 +550,7 @@
       document.getElementById('login-message').classList.add('hidden');
       document.getElementById('login-btn').disabled = false;
       document.getElementById('login-btn').textContent = 'Belépés';
+      document.getElementById('discovery-log').classList.add('hidden');
     });
 
     // Fájl megnyitása gomb kezelése
@@ -541,12 +583,23 @@
           document.getElementById('loading').classList.add('hidden');
           
           // Marked.js-sel átalakítjuk HTML-re
-          document.getElementById('viewer').innerHTML = marked.parse(md);
+          if (typeof marked !== 'undefined') {
+            document.getElementById('viewer').innerHTML = marked.parse(md);
+          } else {
+            // Fallback: egyszerű szöveg megjelenítés
+            document.getElementById('viewer').innerHTML = `<pre>${md}</pre>`;
+          }
           
-          // Kód szintaxis kiemelés alkalmazása
-          document.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
-          });
+          // Kód szintaxis kiemelés alkalmazása (ha elérhető)
+          if (typeof hljs !== 'undefined') {
+            document.querySelectorAll('pre code').forEach((block) => {
+              try {
+                hljs.highlightElement(block);
+              } catch (e) {
+                console.warn('Highlight.js elem hiba:', e);
+              }
+            });
+          }
         })
         .catch(err => {
           document.getElementById('loading').classList.add('hidden');
@@ -564,6 +617,12 @@
 
     // Téma inicializálása
     initTheme();
+
+    // Scriptek betöltésének ellenőrzése
+    window.addEventListener('load', function() {
+      console.log('Marked.js elérhető:', typeof marked !== 'undefined');
+      console.log('Highlight.js elérhető:', typeof hljs !== 'undefined');
+    });
   </script>
 </body>
 </html>
