@@ -2,14 +2,22 @@
 <html lang="hu">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Jelszavas Markdown‐néző</title>
+
+  <!-- Tailwind CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+
+  <!-- Highlight.js GitHub-szerű stílus -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+  <!-- Marked.js a Markdown feldolgozásához -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js a kódszintaxis-kiemeléshez -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
   <style>
-    /* Ide jön a teljes korábbi <style> tartalom (Tailwind‐hez kiegészítések). */
+    /* Markdown-body GitHub-szerű stílusok */
     .markdown-body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
       line-height: 1.6;
@@ -31,8 +39,8 @@
     .markdown-body table tr:nth-child(2n) { background-color: #f6f8fa; }
     .markdown-body img { max-width: 100%; }
     .markdown-body hr { height: 0.25em; padding: 0; margin: 24px 0; background-color: #e1e4e8; border: 0; }
-    
-    /* Dark mode styles */
+
+    /* Dark mode stílusok */
     .dark .markdown-body { color: #c9d1d9; }
     .dark .markdown-body h1, .dark .markdown-body h2 { border-bottom-color: #30363d; }
     .dark .markdown-body code { background-color: rgba(240, 246, 252, 0.15); }
@@ -42,10 +50,10 @@
     .dark .markdown-body table tr:nth-child(2n) { background-color: #161b22; }
     .dark .markdown-body table th, .dark .markdown-body table td { border-color: #30363d; }
     .dark .markdown-body hr { background-color: #30363d; }
-    
+
     .transition-all { transition: all 0.3s ease; }
-    
-    /* Custom scrollbar */
+
+    /* Egyéni görgetősáv stílusok */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
@@ -55,22 +63,27 @@
     .dark ::-webkit-scrollbar-thumb:hover { background: #777; }
   </style>
 </head>
+
 <body class="bg-gray-50 text-gray-900 transition-all">
-  <!-- Theme toggle button -->
+  <!-- Theme toggle gomb -->
   <div class="fixed top-4 right-4 z-10">
     <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      <!-- Sun icon (for dark mode) -->
-      <svg id="sun-icon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+      <!-- Nap ikon (sötét módhoz) -->
+      <svg id="sun-icon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+           xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
       </svg>
-      <!-- Moon icon (for light mode) -->
-      <svg id="moon-icon" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+      <!-- Hold ikon (világos módhoz) -->
+      <svg id="moon-icon" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+           xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
       </svg>
     </button>
   </div>
 
-  <!-- Login panel -->
+  <!-- Bejelentkezési panel -->
   <div id="login" class="min-h-screen flex items-center justify-center px-4">
     <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 transition-all">
       <div class="text-center">
@@ -81,53 +94,88 @@
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jelszó</label>
           <div class="relative">
-            <input type="password" id="password" 
-                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
-                  placeholder="Írd be a jelszót">
-            <button id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 dark:text-gray-400">
-              <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            <input type="password" id="password"
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md
+                          focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                   placeholder="Írd be a jelszót">
+            <button id="toggle-password"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 dark:text-gray-400">
+              <!-- szem ikon a jelszó láthatóvá tételéhez -->
+              <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
+                         -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
               </svg>
-              <svg id="eye-off-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+              <!-- elrejtett szem ikonnal (amikor jelszó látható) -->
+              <svg id="eye-off-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19
+                         c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029
+                         m5.858.908a3 3 0 114.243 4.243
+                         M9.878 9.878l4.242 4.242
+                         M9.88 9.88l-3.29-3.29
+                         m7.532 7.532l3.29 3.29
+                         M3 3l3.59 3.59
+                         m0 0A9.953 9.953 0 0112 5
+                         c4.478 0 8.268 2.943 9.543 7
+                         a10.025 10.025 0 01-4.132 5.411
+                         m0 0L21 21"></path>
               </svg>
             </button>
           </div>
         </div>
-        <button id="login-btn" 
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+        <button id="login-btn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
           Belépés
         </button>
-        <div id="login-message" class="text-red-500 text-center hidden"><p>Hibás jelszó! Kérjük, próbáld újra.</p></div>
+        <div id="login-message" class="text-red-500 text-center hidden">
+          <p>Hibás jelszó! Kérjük, próbáld újra.</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Content panel (hidden by default) -->
+  <!-- Tartalom panel (alapból elrejtve) -->
   <div id="content" class="hidden min-h-screen flex flex-col transition-all">
     <header class="bg-white dark:bg-gray-800 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex justify-between items-center">
           <h1 class="text-xl font-bold text-gray-900 dark:text-white">Markdown-néző</h1>
           <div class="flex items-center space-x-4">
-            <button id="refresh-files" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white" title="Fájlok frissítése">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            <button id="refresh-files"
+                    class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    title="Fájlok frissítése">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581
+                         m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
             </button>
-            <button id="logout-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white" title="Kijelentkezés">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            <button id="logout-btn"
+                    class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    title="Kijelentkezés">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7
+                         m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7
+                         a3 3 0 013-3h4a3 3 0 013 3v1"></path>
               </svg>
             </button>
           </div>
         </div>
       </div>
     </header>
-    
+
     <main class="flex-grow container mx-auto px-4 py-6">
       <div class="max-w-7xl mx-auto">
+        <!-- Fájlválasztó panel -->
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-medium text-gray-900 dark:text-white">Válassz egy Markdown-fájlt</h2>
@@ -135,42 +183,62 @@
           </div>
           <div class="flex flex-col sm:flex-row sm:items-center gap-4">
             <div class="flex-grow">
-              <select id="file-selector" 
-                      class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white">
-                <option value="" disabled selected>Fájlok betöltése...</option>
+              <select id="file-selector"
+                      class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600
+                             focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                             rounded-md dark:bg-gray-700 dark:text-white">
+                <option value="" disabled selected>Fájlok betöltése…</option>
               </select>
             </div>
-            <button id="view-btn" 
-                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button id="view-btn"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm
+                           font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none
+                           focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               Megnyitás
             </button>
           </div>
+
+          <!-- Betöltésjelző (odhúzza a kurzort, míg a fájlok listázása fut) -->
           <div id="file-loading" class="hidden mt-4 text-center">
             <div class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                   viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4
+                         zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Fájlok keresése...
+              Fájlok keresése…
             </div>
           </div>
+
+          <!-- Feltárási napló, ha részletesebben szeretnéd látni a folyamatot -->
           <div id="discovery-log" class="hidden mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-sm">
             <div class="font-medium mb-2">Fájl felderítés részletei:</div>
             <div id="discovery-details" class="text-gray-600 dark:text-gray-300 space-y-1"></div>
           </div>
         </div>
-        
+
+        <!-- Markdown-megjelenítő panel -->
         <div id="viewer-container" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 overflow-hidden">
           <div id="loading" class="hidden flex justify-center items-center py-12">
-            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                 viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4
+                       zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
           <div id="viewer" class="markdown-body dark:text-gray-200">
+            <!-- Ha még nincs kiválasztott fájl, ez az üzenet jelenik meg -->
             <div class="text-center text-gray-500 dark:text-gray-400 py-12">
-              <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5
+                         a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414
+                         a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
               <h3 class="mt-2 text-sm font-medium">Nincs kiválasztott dokumentum</h3>
               <p class="mt-1 text-sm">Válassz egy fájlt a megtekintéshez.</p>
@@ -179,7 +247,7 @@
         </div>
       </div>
     </main>
-    
+
     <footer class="bg-white dark:bg-gray-800 shadow-inner">
       <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
         <p class="text-center text-sm text-gray-500 dark:text-gray-400">
@@ -193,29 +261,23 @@
     // SHA-256 hash a valódi jelszóból ("titok123")
     const correctHash = '3543352c40d1a91fbe5df537d3dc6f6c613f819e0ef4eab16e3344cf41273b5c';
 
-    // Fallback fájlok listája (statikus, GitHub Pages kompatibilis)
-    const fallbackFiles = [
-      'example.md',
-      // ide írd be a további .md fájlok nevét, pl. 'feladat1.md', 'dokumentacio.md'
-    ];
-
+    // Mostantól NINCS fallbackFiles – a szerverről kérjük le a fájlneveket
     let availableFiles = [];
     let discoveryLog = [];
 
-    // SHA-256 Web Crypto API
+    // SHA-256 Web Crypto API (klienstoldali hash előállításához)
     async function sha256(message) {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return hashHex;
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // Marked.js konfiguráció (code highlight + GitHub‐szerű Markdown megjelenés)
+    // Marked.js konfiguráció (kódszintaxis-kiemeléssel)
     function initializeMarked() {
       if (typeof marked !== 'undefined') {
         marked.setOptions({
-          highlight: function(code, lang) {
+          highlight: (code, lang) => {
             if (typeof hljs !== 'undefined') {
               if (lang && hljs.getLanguage(lang)) {
                 try {
@@ -243,7 +305,6 @@
       discoveryLog.push(message);
       console.log('Discovery:', message);
     }
-
     function showDiscoveryLog() {
       const logContainer = document.getElementById('discovery-log');
       const logDetails = document.getElementById('discovery-details');
@@ -253,7 +314,7 @@
       }
     }
 
-    // Markdown fájlok "felderítése" statikus listából
+    // A szerveroldali /api/files végponton lekérjük a Markdown fájlok listáját
     async function discoverMarkdownFiles() {
       const fileLoadingIndicator = document.getElementById('file-loading');
       const selector = document.getElementById('file-selector');
@@ -261,19 +322,29 @@
 
       discoveryLog = [];
       fileLoadingIndicator.classList.remove('hidden');
-      selector.innerHTML = '<option value="" disabled selected>Fájlok keresése...</option>';
-      addDiscoveryLog('Statikus fájllista betöltése...');
+      selector.innerHTML = '<option value="" disabled selected>Fájlok keresése…</option>';
+      addDiscoveryLog('Szerveroldali fájl-lista lekérése…');
 
-      // A fallbackFiles tömböt használjuk
-      availableFiles = fallbackFiles;
-      if (availableFiles.length > 0) {
-        populateFileSelector(availableFiles);
-        addDiscoveryLog(`Sikeres betöltés: ${availableFiles.length} Markdown fájl.`);
-        fileCount.textContent = `${availableFiles.length} fájl található`;
-      } else {
-        addDiscoveryLog('Nem található Markdown fájl a files/ mappában.');
-        selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
-        fileCount.textContent = 'Nincs fájl';
+      try {
+        const res = await fetch('/api/files');
+        if (!res.ok) throw new Error(`Hiba: ${res.status} ${res.statusText}`);
+        const mdFiles = await res.json(); // Pl. ["example.md", "feladat1.md", …]
+
+        if (Array.isArray(mdFiles) && mdFiles.length > 0) {
+          availableFiles = mdFiles;
+          populateFileSelector(availableFiles);
+          addDiscoveryLog(`Sikeres betöltés: ${availableFiles.length} Markdown fájl.`);
+          fileCount.textContent = `${availableFiles.length} fájl található`;
+        } else {
+          addDiscoveryLog('Nincs egyetlen Markdown fájl sem a files/ mappában.');
+          selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
+          fileCount.textContent = 'Nincs fájl';
+        }
+      } catch (err) {
+        console.error('Hiba a discoverMarkdownFiles során:', err);
+        addDiscoveryLog(`Hiba a fájlok lekérésekor: ${err.message}`);
+        selector.innerHTML = '<option value="" disabled selected>Hiba a fájlok lekérésekor</option>';
+        fileCount.textContent = 'Hiba';
       }
 
       fileLoadingIndicator.classList.add('hidden');
@@ -284,8 +355,8 @@
     function populateFileSelector(files) {
       const selector = document.getElementById('file-selector');
       const fileCount = document.getElementById('file-count');
-      
-      selector.innerHTML = '<option value="" disabled selected>Válassz egy fájlt...</option>';
+
+      selector.innerHTML = '<option value="" disabled selected>Válassz egy fájlt…</option>';
       if (files.length === 0) {
         selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
         fileCount.textContent = 'Nincs fájl';
@@ -304,7 +375,7 @@
 
     // Téma (dark/light) inicializálása
     function initTheme() {
-      if (localStorage.theme === 'dark' || 
+      if (localStorage.theme === 'dark' ||
           (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
         document.body.classList.add('dark', 'bg-gray-900');
@@ -319,7 +390,7 @@
       }
     }
 
-    // Téma váltás gomb
+    // Téma váltás gomb esemény
     document.getElementById('theme-toggle').addEventListener('click', function() {
       if (document.documentElement.classList.contains('dark')) {
         document.documentElement.classList.remove('dark');
@@ -337,7 +408,7 @@
       }
     });
 
-    // Jelszó látványtoggle
+    // Jelszó szem toggle
     document.getElementById('toggle-password').addEventListener('click', function() {
       const passwordInput = document.getElementById('password');
       const eyeIcon = document.getElementById('eye-icon');
@@ -353,14 +424,14 @@
       }
     });
 
-    // Enter gomb a jelszó mezőn
+    // Enter gomb a jelszómezőn
     document.getElementById('password').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         document.getElementById('login-btn').click();
       }
     });
 
-    // Bejelentkezés gomb
+    // Bejelentkezés gomb eseménye
     document.getElementById('login-btn').addEventListener('click', async () => {
       const loginMessage = document.getElementById('login-message');
       const pwd = document.getElementById('password').value;
@@ -369,23 +440,27 @@
         loginMessage.innerHTML = '<p>Kérjük, add meg a jelszót!</p>';
         return;
       }
-      // Gomb tiltása folyamat közben
+      // Tiltjuk a gombot, amíg a hash készül
       document.getElementById('login-btn').disabled = true;
       document.getElementById('login-btn').innerHTML = `
-        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg"
+             fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4
+                   zm2 5.291A7.962 7.962 0 014 12H0
+                   c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        Ellenőrzés...
+        Ellenőrzés…
       `;
       try {
         const pwdHash = await sha256(pwd);
         if (pwdHash === correctHash) {
-          // helyes jelszó: UI váltása
+          // Helyes jelszó → UI váltása
           document.getElementById('login').classList.add('hidden');
           document.getElementById('content').classList.remove('hidden');
 
-          // Markdown és fájlok inicializálása
+          // Marked.js inicializálása, majd a fájlok lekérése
           initializeMarked();
           await discoverMarkdownFiles();
         } else {
@@ -420,14 +495,16 @@
       document.getElementById('discovery-log').classList.add('hidden');
     });
 
-    // Megnyitás gomb
+    // Megnyitás gomb – a kiválasztott fájl betöltése és Markdown parse
     document.getElementById('view-btn').addEventListener('click', () => {
       const filename = document.getElementById('file-selector').value;
       if (!filename) {
         document.getElementById('viewer').innerHTML = `
           <div class="text-center text-red-500 py-12">
-            <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                 xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <h3 class="mt-2 text-sm font-medium">Nincs kiválasztott fájl</h3>
             <p class="mt-1 text-sm">Kérjük, válassz egy fájlt a legördülő menüből.</p>
@@ -435,22 +512,25 @@
         `;
         return;
       }
-      // Betöltésjelző
+      // Betöltésjelző megjelenítése
       document.getElementById('viewer').innerHTML = '';
       document.getElementById('loading').classList.remove('hidden');
-      
+
       fetch('files/' + filename)
         .then(res => {
           if (!res.ok) throw new Error(`A fájl "${filename}" nem található vagy nem elérhető.`);
           return res.text();
         })
         .then(md => {
+          // Betöltésjelző elrejtése
           document.getElementById('loading').classList.add('hidden');
+          // Markdown parse Marked.js-sel
           if (typeof marked !== 'undefined') {
             document.getElementById('viewer').innerHTML = marked.parse(md);
           } else {
             document.getElementById('viewer').innerHTML = `<pre>${md}</pre>`;
           }
+          // Kódszintaxis-kiemelés Highlight.js-sel
           if (typeof hljs !== 'undefined') {
             document.querySelectorAll('pre code').forEach((block) => {
               try {
@@ -465,8 +545,10 @@
           document.getElementById('loading').classList.add('hidden');
           document.getElementById('viewer').innerHTML = `
             <div class="text-center text-red-500 py-12">
-              <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               <h3 class="mt-2 text-sm font-medium">Hiba történt</h3>
               <p class="mt-1 text-sm">${err.message}</p>
@@ -475,8 +557,10 @@
         });
     });
 
-    // Téma inicializálása
+    // Inicializáljuk a témát
     initTheme();
+
+    // Ellenőrzés a konzolban, hogy a külső könyvtárak betöltődtek-e
     window.addEventListener('load', function() {
       console.log('Marked.js elérhető:', typeof marked !== 'undefined');
       console.log('Highlight.js elérhető:', typeof hljs !== 'undefined');
