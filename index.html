@@ -114,11 +114,18 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex justify-between items-center">
           <h1 class="text-xl font-bold text-gray-900 dark:text-white">Markdown-néző</h1>
-          <button id="logout-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-            </svg>
-          </button>
+          <div class="flex items-center space-x-4">
+            <button id="refresh-files" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white" title="Fájlok frissítése">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </button>
+            <button id="logout-btn" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white" title="Kijelentkezés">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -126,18 +133,30 @@
     <main class="flex-grow container mx-auto px-4 py-6">
       <div class="max-w-7xl mx-auto">
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
-          <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Válassz egy Markdown-fájlt</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Válassz egy Markdown-fájlt</h2>
+            <div id="file-count" class="text-sm text-gray-500 dark:text-gray-400"></div>
+          </div>
           <div class="flex flex-col sm:flex-row sm:items-center gap-4">
             <div class="flex-grow">
               <select id="file-selector" 
                       class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white">
-                <option value="" disabled selected>Válassz egy fájlt...</option>
+                <option value="" disabled selected>Fájlok betöltése...</option>
               </select>
             </div>
             <button id="view-btn" 
                     class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               Megnyitás
             </button>
+          </div>
+          <div id="file-loading" class="hidden mt-4 text-center">
+            <div class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Fájlok keresése...
+            </div>
           </div>
         </div>
         
@@ -174,11 +193,13 @@
     // SHA-256 hash a valódi jelszóból ("titok123")
     const correctHash = '3543352c40d1a91fbe5df537d3dc6f6c613f819e0ef4eab16e3344cf41273b5c';
 
-    // A repository-ban elérhető .md fájlok listája
-    const files = [
-      'example.md'
-      // ide bővítheted tetszőlegesen: 'ertekeles.md','feladatok.md', stb.
+    // Fallback fájlok listája (ha az automatikus felderítés nem működik)
+    const fallbackFiles = [
+      'example.md',
+      'readme.md'
     ];
+
+    let availableFiles = [];
 
     // A böngészőben elvégzett SHA-256 (Web Crypto API)
     async function sha256(message) {
@@ -201,9 +222,170 @@
       gfm: true
     });
 
+    // Fájlok automatikus felderítése
+    async function discoverMarkdownFiles() {
+      const fileLoadingIndicator = document.getElementById('file-loading');
+      const selector = document.getElementById('file-selector');
+      const fileCount = document.getElementById('file-count');
+      
+      fileLoadingIndicator.classList.remove('hidden');
+      selector.innerHTML = '<option value="" disabled selected>Fájlok keresése...</option>';
+      
+      try {
+        // Próbálkozás 1: Directory listing API (ha van)
+        try {
+          const response = await fetch('files/', {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json, text/html'
+            }
+          });
+          
+          if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            
+            // Ha JSON választ kapunk (egyedi API)
+            if (contentType && contentType.includes('application/json')) {
+              const data = await response.json();
+              if (data.files && Array.isArray(data.files)) {
+                availableFiles = data.files.filter(file => file.endsWith('.md'));
+                if (availableFiles.length > 0) {
+                  populateFileSelector(availableFiles);
+                  fileLoadingIndicator.classList.add('hidden');
+                  return;
+                }
+              }
+            }
+            
+            // Ha HTML választ kapunk (Apache/Nginx directory listing)
+            if (contentType && contentType.includes('text/html')) {
+              const html = await response.text();
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, 'text/html');
+              const links = doc.querySelectorAll('a[href]');
+              
+              const foundFiles = [];
+              links.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href.endsWith('.md') && !href.startsWith('/') && !href.includes('..')) {
+                  foundFiles.push(href);
+                }
+              });
+              
+              if (foundFiles.length > 0) {
+                availableFiles = foundFiles;
+                populateFileSelector(availableFiles);
+                fileLoadingIndicator.classList.add('hidden');
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.log('Directory listing nem elérhető:', e.message);
+        }
+
+        // Próbálkozás 2: Ismert fájlnevek ellenőrzése
+        const commonMarkdownFiles = [
+          'readme.md', 'README.md', 'index.md', 'INDEX.md',
+          'example.md', 'EXAMPLE.md', 'sample.md', 'SAMPLE.md',
+          'docs.md', 'DOCS.md', 'documentation.md', 'DOCUMENTATION.md',
+          'guide.md', 'GUIDE.md', 'tutorial.md', 'TUTORIAL.md',
+          'help.md', 'HELP.md', 'faq.md', 'FAQ.md',
+          'changelog.md', 'CHANGELOG.md', 'news.md', 'NEWS.md',
+          'notes.md', 'NOTES.md', 'info.md', 'INFO.md'
+        ];
+
+        const existingFiles = [];
+        
+        // Ellenőrizzük a gyakori fájlneveket
+        for (const filename of commonMarkdownFiles) {
+          try {
+            const response = await fetch(`files/${filename}`, { method: 'HEAD' });
+            if (response.ok) {
+              existingFiles.push(filename);
+            }
+          } catch (e) {
+            // Fájl nem létezik, folytatjuk
+          }
+        }
+
+        // Próbálkozás 3: Számozott fájlok keresése (pl. file1.md, file2.md, stb.)
+        for (let i = 1; i <= 20; i++) {
+          try {
+            const filename = `file${i}.md`;
+            const response = await fetch(`files/${filename}`, { method: 'HEAD' });
+            if (response.ok) {
+              existingFiles.push(filename);
+            }
+          } catch (e) {
+            // Fájl nem létezik
+          }
+        }
+
+        // Próbálkozás 4: Dátum alapú fájlok keresése
+        const currentYear = new Date().getFullYear();
+        const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+        
+        for (const month of months) {
+          try {
+            const filename = `${currentYear}-${month}.md`;
+            const response = await fetch(`files/${filename}`, { method: 'HEAD' });
+            if (response.ok) {
+              existingFiles.push(filename);
+            }
+          } catch (e) {
+            // Fájl nem létezik
+          }
+        }
+
+        if (existingFiles.length > 0) {
+          availableFiles = [...new Set(existingFiles)]; // Duplikátumok eltávolítása
+          populateFileSelector(availableFiles);
+        } else {
+          // Fallback: használjuk a kézzel megadott listát
+          console.log('Automatikus felderítés sikertelen, fallback lista használata');
+          availableFiles = fallbackFiles;
+          populateFileSelector(availableFiles);
+        }
+
+      } catch (error) {
+        console.error('Hiba a fájlok felderítése során:', error);
+        // Fallback: használjuk a kézzel megadott listát
+        availableFiles = fallbackFiles;
+        populateFileSelector(availableFiles);
+      }
+      
+      fileLoadingIndicator.classList.add('hidden');
+    }
+
+    // Fájl selector feltöltése
+    function populateFileSelector(files) {
+      const selector = document.getElementById('file-selector');
+      const fileCount = document.getElementById('file-count');
+      
+      selector.innerHTML = '<option value="" disabled selected>Válassz egy fájlt...</option>';
+      
+      if (files.length === 0) {
+        selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
+        fileCount.textContent = 'Nincs fájl';
+        return;
+      }
+
+      // Fájlok rendezése ABC sorrendben
+      const sortedFiles = [...files].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+      
+      sortedFiles.forEach(file => {
+        const option = document.createElement('option');
+        option.value = file;
+        option.textContent = file;
+        selector.appendChild(option);
+      });
+
+      fileCount.textContent = `${files.length} fájl található`;
+    }
+
     // Téma kezelése
     function initTheme() {
-      // Ellenőrizzük, hogy a felhasználó preferál-e sötét módot
       if (localStorage.theme === 'dark' || 
           (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
@@ -293,15 +475,8 @@
           document.getElementById('login').classList.add('hidden');
           document.getElementById('content').classList.remove('hidden');
 
-          // feltöltjük a legördülő menüt a files tömb alapján
-          const selector = document.getElementById('file-selector');
-          selector.innerHTML = '<option value="" disabled selected>Válassz egy fájlt...</option>';
-          files.forEach(f => {
-            const opt = document.createElement('option');
-            opt.value = f;
-            opt.textContent = f;
-            selector.appendChild(opt);
-          });
+          // Automatikus fájl felderítés indítása
+          await discoverMarkdownFiles();
         } else {
           loginMessage.classList.remove('hidden');
           loginMessage.innerHTML = '<p>Hibás jelszó! Kérjük, próbáld újra.</p>';
@@ -319,6 +494,11 @@
         document.getElementById('login-btn').disabled = false;
         document.getElementById('login-btn').textContent = 'Belépés';
       }
+    });
+
+    // Fájlok frissítése gomb
+    document.getElementById('refresh-files').addEventListener('click', async () => {
+      await discoverMarkdownFiles();
     });
 
     // Kijelentkezés gomb kezelése
@@ -353,7 +533,7 @@
       
       fetch('files/' + filename)
         .then(res => {
-          if (!res.ok) throw new Error('A kiválasztott fájl nem található.');
+          if (!res.ok) throw new Error(`A fájl "${filename}" nem található vagy nem elérhető.`);
           return res.text();
         })
         .then(md => {
