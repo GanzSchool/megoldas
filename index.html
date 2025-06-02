@@ -197,11 +197,11 @@
     // SHA-256 hash a valódi jelszóból ("titok123")
     const correctHash = '3543352c40d1a91fbe5df537d3dc6f6c613f819e0ef4eab16e3344cf41273b5c';
 
-    // Fallback fájlok listája (ha az automatikus felderítés nem működik)
+    // Fallback fájlok listája (statikus, GitHub Pages kompatibilis)
     const fallbackFiles = [
       'example.md',
-      'readme.md',
-      'README.md'
+      'example copy.md'
+      // Ide írd be az összes Markdown fájl nevét, amit a files mappába feltöltesz
     ];
 
     let availableFiles = [];
@@ -262,7 +262,7 @@
       }
     }
 
-    // Fájlok automatikus felderítése - szerveres verzió
+    // Fájlok "felderítése" statikus listából (GitHub Pages kompatibilis)
     async function discoverMarkdownFiles() {
       const fileLoadingIndicator = document.getElementById('file-loading');
       const selector = document.getElementById('file-selector');
@@ -270,25 +270,16 @@
       discoveryLog = [];
       fileLoadingIndicator.classList.remove('hidden');
       selector.innerHTML = '<option value="" disabled selected>Fájlok keresése...</option>';
-      addDiscoveryLog('Fájl felderítés indítása szerver API-val...');
-      try {
-        const response = await fetch('/api/files');
-        if (!response.ok) throw new Error('Nem sikerült lekérni a fájlok listáját.');
-        const files = await response.json();
-        availableFiles = files;
-        if (availableFiles.length > 0) {
-          populateFileSelector(availableFiles);
-          addDiscoveryLog(`Sikeres felderítés: ${availableFiles.length} Markdown fájl betöltve.`);
-        } else {
-          addDiscoveryLog('Nem található Markdown fájl a files/ mappában.');
-          selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
-          fileCount.textContent = 'Nincs fájl';
-        }
-      } catch (error) {
-        console.error('Hiba a fájlok felderítése során:', error);
-        addDiscoveryLog(`Hiba történt: ${error.message}`);
-        selector.innerHTML = '<option value="" disabled selected>Hiba történt a fájlok betöltésekor</option>';
-        fileCount.textContent = 'Hiba';
+      addDiscoveryLog('Statikus fájllista betöltése...');
+      availableFiles = fallbackFiles;
+      if (availableFiles.length > 0) {
+        populateFileSelector(availableFiles);
+        addDiscoveryLog(`Sikeres betöltés: ${availableFiles.length} Markdown fájl.`);
+        fileCount.textContent = `${availableFiles.length} fájl található`;
+      } else {
+        addDiscoveryLog('Nem található Markdown fájl a files/ mappában.');
+        selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
+        fileCount.textContent = 'Nincs fájl';
       }
       fileLoadingIndicator.classList.add('hidden');
       showDiscoveryLog();
