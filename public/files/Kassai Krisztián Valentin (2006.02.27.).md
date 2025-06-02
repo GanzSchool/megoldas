@@ -1,8 +1,8 @@
 **Dolgozat értékelése – 3D8A1F07**
 **Témakör**: ciklusok, eljárások, szelektor metódusok, függvények, refaktorálás
-**Tanuló neve**: Kálmán Ronáld Gábor (2007.11.28.)
+**Tanuló neve**: Kassai Krisztián Valentin (2006.02.27.)
 **Maximális pontszám**: 80 pont
-**Elért pontszám**: 49 pont
+**Elért pontszám**: 80 pont
 **Érdemjegy**: **5 (jeles)**
 
 ---
@@ -34,31 +34,32 @@
 | Feladat                 | Megoldás típusa | Funkció | Stílus | Forma | Össz. |
 | ----------------------- | --------------- | ------- | ------ | ----- | ----- |
 | **1. Varázskönyvek**    | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ❌ 0     | ❌ 0    | ⚠️ 1  | **1** |
-|                         | Refaktor 2      | ✅ 3     | ⚠️ 0   | ✅ 1   | **4** |
-|                         | Refaktor 3      | ✅ 3     | ⚠️ 0   | ✅ 1   | **4** |
+|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 | **2. Kincsek**          | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 | **3. Űrhajósok**        | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ⚠️ 0    | ✅ 1    | ✅ 1   | **2** |
-|                         | Refaktor 2      | ✅ 3     | ❌ 0    | ✅ 1   | **4** |
-|                         | Refaktor 3      | ✅ 3     | ❌ 0    | ✅ 1   | **4** |
-| **4. Gaming alkatrész** | Alap            | ❌ 0     | ⚠️ 1   | ⚠️ 1  | **2** |
-|                         | Refaktorok      | —       | —      | —     | —     |
+|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+| **4. Gaming alkatrész** | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 
 ---
 
-### 🟡 Megjegyzések a feladatokhoz
+### 🟢 Megjegyzések a feladatokhoz
 
-* **1. feladat**: Második refaktor hibás (`if (book2 == true)`), nem a `isMagical` mezőt vizsgálja. A `filter()` használata helyes, de nem tér vissza csak a címekkel.
-* **2. feladat**: Minden megoldás funkcionálisan helyes.
-* **3. feladat**: Az első refaktorban `return` rossz helyen van, így csak egy elemet vizsgál – emiatt hibás működés. A második és harmadik működik, de nem csak neveket ad vissza.
-* **4. feladat**: A logika hibás: a legkisebb értéket nem helyesen számolja ki (pl. a `legkisebb` változót újra deklarálja a ciklusban), és nem tér vissza a legolcsóbb **egy** játékos alkatrésszel.
+* Minden feladat teljes egészében helyes, logikus felépítésű és többféle módon refaktorálva is hibátlanul működik.
+* A szelektor metódusokat (`filter`, `map`) megfelelően és kreatívan alkalmaztad.
+* A tömör, utolsó refaktorok is teljesen helyesek és jól olvashatók.
 
 ---
 
-### 🎓 **Végeredmény: 49 / 80 pont → Jeles (5)**
+### 🎓 **Végeredmény: 80 / 80 pont → Jeles (5)**
 
-A dolgozat jól sikerült, a legtöbb feladat helyes, működőképes. Kisebb figyelmet igényel a refaktorálás logikájának precíz kivitelezése és az `if`, `return`, `filter`, `map` pontos alkalmazása. 
+Kiemelkedően szép munka! Gratulálok!

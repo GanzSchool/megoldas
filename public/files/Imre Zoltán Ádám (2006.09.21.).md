@@ -1,8 +1,9 @@
+NEMÍRT
 **Dolgozat értékelése – 3D8A1F07**
 **Témakör**: ciklusok, eljárások, szelektor metódusok, függvények, refaktorálás
-**Tanuló neve**: Magyar Dániel Kristóf (2007.10.24.)
+**Tanuló neve**: Imre Zoltán Ádám (2006.09.21.)
 **Maximális pontszám**: 80 pont
-**Elért pontszám**: 75 pont
+**Elért pontszám**: 55 pont
 **Érdemjegy**: **5 (jeles)**
 
 ---
@@ -33,32 +34,33 @@
 
 | Feladat                 | Megoldás típusa | Funkció | Stílus | Forma | Össz. |
 | ----------------------- | --------------- | ------- | ------ | ----- | ----- |
-| **1. Varázskönyvek**    | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-| **2. Kincsek**          | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+| **1. Varázskönyvek**    | Alap            | ✅ 3     | ⚠️ 0   | ⚠️ 0  | **3** |
+|                         | Refaktor 1      | ✅ 3     | ⚠️ 0   | ⚠️ 0  | **3** |
+|                         | Refaktor 2      | ⚠️ 1    | ⚠️ 0   | ❌ 0   | **1** |
+|                         | Refaktor 3      | ❌ 0     | ❌ 0    | ❌ 0   | **0** |
+| **2. Kincsek**          | Alap            | ❌ 0     | ❌ 0    | ❌ 0   | **0** |
 |                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 | **3. Űrhajósok**        | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 1      | ❌ 0     | ❌ 0    | ❌ 0   | **0** |
+|                         | Refaktor 2      | ✅ 3     | ⚠️ 0   | ❌ 0   | **3** |
 | **4. Gaming alkatrész** | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 2      | ⚠️ 1    | ⚠️ 1   | ⚠️ 1  | **3** |
-|                         | Refaktor 3      | ⚠️ 1    | ⚠️ 1   | ⚠️ 1  | **3** |
+|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 3      | ❌ 0     | ❌ 0    | ❌ 0   | **0** |
 
 ---
 
 ### 🟡 Megjegyzések a feladatokhoz
 
-* **1–3. feladat**: Minden megoldás működőképes, logikusan, szintaktikailag is helyes.
-* **4. feladat**: A 3. és 4. refaktor `sort(c => c.price)` helytelen, mert nem adja meg két elem közti viszonyt. Helyes forma: `sort((a, b) => a.price - b.price)`. Így hibásan a legdrágábbat adja vissza, nem a legolcsóbbat.
+* **1. feladat**: Szintaktikai hibák (`ismagical` kisbetű, hibás `titles` mező), függvénynevek elírása.
+* **2. feladat**: Az alapverzió hibás (`treasure` változó nincs deklarálva), a többi megoldás helyes.
+* **3. feladat**: Az első refaktor hibás, hibás feltétel (a.simulatorHours helyett a.astronauts), harmadik verzióban elírás a változónévben (`restult`, `result` helyett).
+* **4. feladat**: A három működő verzió jó, a negyedik (refaktor 3) hiányos, hibás `reduce` használat.
 
 ---
 
-### 🎓 **Végeredmény: 75 / 80 pont → Jeles (5)**
+### 🎓 **Végeredmény: 55 / 80 pont → Jeles (5)**
 
-Nagyon szép munka! A feladatok többsége pontosan és tisztán lett megvalósítva. Egyedül a 4. feladat utolsó két refaktor verziójában volt logikai hiba a rendezésnél, de ez nem rontotta jelentősen az összteljesítményt. Gratulálok!
+A megoldások többsége jó úton jár, a fő logikai irány jó. Több ponton figyelmetlenségi vagy elgépelési hiba okozott funkcióvesztést. 

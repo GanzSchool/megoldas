@@ -1,9 +1,9 @@
 **Dolgozat értékelése – 3D8A1F07**
 **Témakör**: ciklusok, eljárások, szelektor metódusok, függvények, refaktorálás
-**Tanuló neve**: Nyakas Ákos András (2007.11.13.)
+**Tanuló neve**: Kertész Csaba György (2007.02.02.)
 **Maximális pontszám**: 80 pont
-**Elért pontszám**: 73 pont
-**Érdemjegy**: **5 (jeles)**
+**Elért pontszám**: 34 pont
+**Érdemjegy**: **4 (jó)**
 
 ---
 
@@ -34,31 +34,25 @@
 | Feladat                 | Megoldás típusa | Funkció | Stílus | Forma | Össz. |
 | ----------------------- | --------------- | ------- | ------ | ----- | ----- |
 | **1. Varázskönyvek**    | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+|                         | Refaktor 1      | ⚠️ 0    | ⚠️ 0   | ⚠️ 0  | **0** |
 |                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-| **2. Kincsek**          | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
+| **2. Kincsek**          | Alap            | ⚠️ 1    | ⚠️ 1   | ⚠️ 1  | **3** |
 | **3. Űrhajósok**        | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 2      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 3      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-| **4. Gaming alkatrész** | Alap            | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
-|                         | Refaktor 1      | ✅ 3     | ✅ 1    | ✅ 1   | **5** |
 |                         | Refaktor 2      | ⚠️ 1    | ⚠️ 1   | ⚠️ 1  | **3** |
-|                         | Refaktor 3      | ⚠️ 1    | ⚠️ 1   | ⚠️ 1  | **3** |
+| **4. Gaming alkatrész** | Alap            | ⚠️ 0    | ⚠️ 0   | ⚠️ 0  | **0** |
 
 ---
 
 ### 🟡 Megjegyzések a feladatokhoz
 
-* **1–3. feladat**: Minden megoldás működőképes, kódstílus egységes, névhasználat következetes.
-* **4. feladat**: A 3. és 4. refaktor nem megfelelő – a `sort(component => component.price)` szintaktikailag hibás, mivel nem hasonlít össze két elemet. Helyesen: `sort((a, b) => a.price - b.price)`. Így ezek hibás eredményt adnak (nem a legolcsóbbat).
+* **1. feladat**: Az `if` feltétel jó, az első ciklus működik. A második verzió (`forOfBooks`) hibás: `books.title` nem létezik, `book.title` kellene. A `filterBooks` refaktor helyes.
+* **2. feladat**: A `push(treasure & treasure.weight, treasure.value)` hibás, logikátlan művelet. Itt egy objektumot vagy szöveget kellett volna betenni, nem bitműveletet.
+* **3. feladat**: A két ciklusos megoldás jó. A `filter` verzióban a feltétel rossz: nem lehet `astronaut.age >= 25 && astronaut.simulatorHours >= 100` közvetlenül a `filter()` paraméterében így, mert ez logikai érték, nem függvény – hiányzik a lambda/funkció forma.
+* **4. feladat**: A `components` tömb definiálva van, de nincs semmilyen szűrés, válogatás, vagy megjelenítés. A feladat gyakorlatilag hiányzik.
 
 ---
 
-### 🎓 **Végeredmény: 73 / 80 pont → Jeles (5)**
+### 🎓 **Végeredmény: 34 / 80 pont → Jó (4)**
 
-Nagyon jó dolgozat! Látszik, hogy érted a ciklusokat, szűrést és tömbkezelést. A rendezés metódusát még érdemes pontosítani, de a feladatokat jól oldottad meg, következetes szerkezetben. Gratulálok az eredményhez!
+A dolgozatban több feladat részmegoldása jól sikerült, de a hibák (rossz property hivatkozás, hiányos vagy hibás logika) rontják az összképet. A stílus és a szintaxis sok helyen rendben van, de a funkcionalitásban erősíteni kell. A refaktorálás gyakorlása, valamint az összetettebb feltételek kezelése kiemelten javasolt.
