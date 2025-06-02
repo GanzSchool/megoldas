@@ -87,7 +87,7 @@
   <div id="login" class="min-h-screen flex items-center justify-center px-4">
     <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 transition-all">
       <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Jelszavas Markdown-néző</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Dolgozat megtekintés</h2>
         <p class="text-gray-600 dark:text-gray-300 mb-6">Kérjük, add meg a jelszót a folytatáshoz</p>
       </div>
       <div class="space-y-4">
@@ -145,7 +145,7 @@
     <header class="bg-white dark:bg-gray-800 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex justify-between items-center">
-          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Markdown-néző</h1>
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white">Dolgozat megtekintés</h1>
           <div class="flex items-center space-x-4">
             <button id="refresh-files"
                     class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
@@ -356,7 +356,7 @@
       const selector = document.getElementById('file-selector');
       const fileCount = document.getElementById('file-count');
 
-      selector.innerHTML = '<option value="" disabled selected>Válassz egy fájlt…</option>';
+      selector.innerHTML = '<option value="" disabled selected>Válaszd ki a neved</option>';
       if (files.length === 0) {
         selector.innerHTML = '<option value="" disabled selected>Nincs elérhető Markdown fájl</option>';
         fileCount.textContent = 'Nincs fájl';
