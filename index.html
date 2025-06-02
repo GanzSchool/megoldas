@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <title>Jelszavas Markdown‐néző</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #login {
+      max-width: 300px;
+      margin: 100px auto;
+      text-align: center;
+    }
+    #content {
+      display: none;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    #file-selector {
+      margin-bottom: 20px;
+    }
+    #viewer {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    /* Kis alapstílus a Markdown‐tartalomnak */
+    #viewer h1 { font-size: 1.8em; margin-bottom: 0.3em; }
+    #viewer h2 { font-size: 1.5em; margin-bottom: 0.3em; }
+    #viewer p { margin-bottom: 0.8em; line-height: 1.4; }
+    #viewer code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+    #viewer pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+  </style>
+  <!-- Marked.js CDN – a Markdown parszolásához -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <!-- Belépési panel -->
+  <div id="login">
+    <h2>Jelszó szükséges</h2>
+    <input type="password" id="password" placeholder="Írd be a jelszót"><br><br>
+    <button id="login-btn">Belépés</button>
+    <p id="login-message" style="color:red;"></p>
+  </div>
+
+  <!-- Ha a jelszó helyes, megjelenik ez a rész -->
+  <div id="content">
+    <h3>Válassz egy Markdown‐fájlt:</h3>
+    <select id="file-selector"></select>
+    <button id="view-btn">Megnyitás</button>
+    <hr>
+    <div id="viewer"></div>
+  </div>
+
+  <script>
+    // SHA-256 hash a valódi jelszóból ("titok123")
+    const correctHash = '3543352c40d1a91fbe5df537d3dc6f6c613f819e0ef4eab16e3344cf41273b5c';
+
+    // A repository-ban elérhető .md fájlok listája
+    const files = [
+      'example.md'
+      // ide bővítheted tetszőlegesen: 'ertekeles.md','feladatok.md', stb.
+    ];
+
+    // A böngészőben elvégzett SHA-256 (Web Crypto API)
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const pwd = document.getElementById('password').value;
+      const pwdHash = await sha256(pwd);
+      if (pwdHash === correctHash) {
+        // helyes jelszó: elrejtjük a login részt, megmutatjuk a tartalmat
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+
+        // feltöltjük a legördülő menüt a files tömb alapján
+        const selector = document.getElementById('file-selector');
+        files.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f;
+          opt.textContent = f;
+          selector.appendChild(opt);
+        });
+      } else {
+        document.getElementById('login-message').textContent = 'Hibás jelszó!';
+      }
+    });
+
+    document.getElementById('view-btn').addEventListener('click', () => {
+      const filename = document.getElementById('file-selector').value;
+      fetch('files/' + filename)
+        .then(res => {
+          if (!res.ok) throw new Error('A kiválasztott fájl nem található.');
+          return res.text();
+        })
+        .then(md => {
+          // Marked.js-sel átalakítjuk HTML-re
+          document.getElementById('viewer').innerHTML = marked.parse(md);
+        })
+        .catch(err => {
+          document.getElementById('viewer').innerHTML = '<p style="color:red;">' + err.message + '</p>';
+        });
+    });
+  </script>
+</body>
+</html>
